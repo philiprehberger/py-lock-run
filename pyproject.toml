@@ -24,9 +24,10 @@ classifiers = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/philiprehberger/py-lock-run"
+Homepage = "https://github.com/philiprehberger/py-lock-run#readme"
 Repository = "https://github.com/philiprehberger/py-lock-run"
 Issues = "https://github.com/philiprehberger/py-lock-run/issues"
+Changelog = "https://github.com/philiprehberger/py-lock-run/blob/main/CHANGELOG.md"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/philiprehberger_lock_run"]

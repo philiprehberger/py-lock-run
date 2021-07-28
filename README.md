@@ -6,7 +6,7 @@
 
 Prevent duplicate script execution using file-based locking.
 
-## Install
+## Installation
 
 ```bash
 pip install philiprehberger-lock-run
