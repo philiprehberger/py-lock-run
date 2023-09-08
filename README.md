@@ -3,6 +3,7 @@
 [![Tests](https://github.com/philiprehberger/py-lock-run/actions/workflows/publish.yml/badge.svg)](https://github.com/philiprehberger/py-lock-run/actions/workflows/publish.yml)
 [![PyPI version](https://img.shields.io/pypi/v/philiprehberger-lock-run.svg)](https://pypi.org/project/philiprehberger-lock-run/)
 [![License](https://img.shields.io/github/license/philiprehberger/py-lock-run)](LICENSE)
+[![Sponsor](https://img.shields.io/badge/sponsor-GitHub%20Sponsors-ec6cb9)](https://github.com/sponsors/philiprehberger)
 
 Prevent duplicate script execution using file-based locking.
 
