@@ -1,5 +1,9 @@
 # philiprehberger-lock-run
 
+[![Tests](https://github.com/philiprehberger/py-lock-run/actions/workflows/publish.yml/badge.svg)](https://github.com/philiprehberger/py-lock-run/actions/workflows/publish.yml)
+[![PyPI version](https://img.shields.io/pypi/v/philiprehberger-lock-run.svg)](https://pypi.org/project/philiprehberger-lock-run/)
+[![License](https://img.shields.io/github/license/philiprehberger/py-lock-run)](LICENSE)
+
 Prevent duplicate script execution using file-based locking.
 
 ## Install
