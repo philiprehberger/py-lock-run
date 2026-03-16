@@ -57,6 +57,14 @@ with lock("my-job", lock_dir="/var/lock"):
 | `locked(name, **kwargs)` | Decorator that wraps the function body in a file lock. |
 | `LockError` | Raised when a lock cannot be acquired. Extends `RuntimeError`. |
 
+
+## Development
+
+```bash
+pip install -e .
+python -m pytest tests/ -v
+```
+
 ## License
 
 MIT
