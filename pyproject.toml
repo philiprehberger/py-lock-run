@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "philiprehberger-lock-run"
-version = "0.1.1"
+version = "0.1.2"
 description = "Prevent duplicate script execution using file-based locking"
 readme = "README.md"
 license = "MIT"
