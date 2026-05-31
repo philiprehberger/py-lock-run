@@ -9,7 +9,13 @@ from pathlib import Path
 
 import pytest
 
-from philiprehberger_lock_run import LockError, lock, locked
+from philiprehberger_lock_run import (
+    LockError,
+    cleanup_locks,
+    is_locked,
+    lock,
+    locked,
+)
 
 
 class TestLockContextManager:
@@ -177,3 +183,59 @@ class TestLockedDecorator:
             return a + b
 
         assert add(2, 3) == 5
+
+
+class TestIsLocked:
+    def test_returns_false_when_not_held(self, tmp_path: Path) -> None:
+        assert is_locked("test-not-held", lock_dir=tmp_path) is False
+
+    def test_returns_false_after_lock_released(self, tmp_path: Path) -> None:
+        with lock("test-released", lock_dir=tmp_path):
+            pass
+        # Checking the same process after release should report unlocked.
+        # We intentionally do not test the "currently held" case in-process
+        # since some platforms allow the same process to re-acquire its own
+        # lock (verifying that would require a subprocess).
+        assert is_locked("test-released", lock_dir=tmp_path) is False
+
+    def test_accepts_string_lock_dir(self, tmp_path: Path) -> None:
+        assert is_locked("test-str", lock_dir=str(tmp_path)) is False
+
+
+class TestCleanupLocks:
+    def test_missing_directory_returns_empty(self, tmp_path: Path) -> None:
+        assert cleanup_locks(tmp_path / "nonexistent") == []
+
+    def test_removes_stale_lock_file(self, tmp_path: Path) -> None:
+        stale = tmp_path / ".philiprehberger-lock-stale.lock"
+        stale.write_text("12345")
+        old_ts = time.time() - 3600  # 1 hour ago
+        os.utime(stale, (old_ts, old_ts))
+
+        removed = cleanup_locks(tmp_path, max_age_seconds=10)
+
+        assert stale.name in removed
+        assert not stale.exists()
+
+    def test_keeps_fresh_lock_file(self, tmp_path: Path) -> None:
+        fresh = tmp_path / ".philiprehberger-lock-fresh.lock"
+        fresh.write_text("12345")
+
+        removed = cleanup_locks(tmp_path, max_age_seconds=86400)
+
+        assert removed == []
+        assert fresh.exists()
+
+    def test_accepts_string_lock_dir(self, tmp_path: Path) -> None:
+        assert cleanup_locks(str(tmp_path)) == []
+
+    def test_ignores_non_lock_files(self, tmp_path: Path) -> None:
+        other = tmp_path / "not-a-lock.txt"
+        other.write_text("hello")
+        old_ts = time.time() - 3600
+        os.utime(other, (old_ts, old_ts))
+
+        removed = cleanup_locks(tmp_path, max_age_seconds=10)
+
+        assert removed == []
+        assert other.exists()

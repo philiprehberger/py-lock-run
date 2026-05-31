@@ -12,7 +12,7 @@ from functools import wraps
 from pathlib import Path
 from typing import Any
 
-__all__ = ["LockError", "lock", "locked"]
+__all__ = ["LockError", "cleanup_locks", "is_locked", "lock", "locked"]
 
 
 class LockError(RuntimeError):
@@ -57,6 +57,83 @@ def locked(
         return wrapper
 
     return decorator
+
+
+def is_locked(name: str, *, lock_dir: str | Path | None = None) -> bool:
+    """Return True if another process currently holds the *name* lock.
+
+    Performs a non-blocking try-acquire; if acquisition succeeds, the
+    lock is immediately released (without deleting the file) and the
+    function returns False. If acquisition fails (would block), returns True.
+    """
+    directory = Path(lock_dir) if lock_dir else Path(tempfile.gettempdir())
+    lock_path = directory / f".philiprehberger-lock-{name}.lock"
+
+    try:
+        fd = os.open(str(lock_path), os.O_CREAT | os.O_RDWR)
+    except OSError:
+        return False
+    try:
+        _lock_fd(fd)
+    except OSError:
+        os.close(fd)
+        return True
+    try:
+        _unlock_fd(fd)
+    finally:
+        os.close(fd)
+    return False
+
+
+def cleanup_locks(
+    lock_dir: str | Path | None = None,
+    *,
+    max_age_seconds: float = 86400,
+) -> list[str]:
+    """Remove orphaned lock files older than *max_age_seconds*.
+
+    Only files that are NOT currently held (verified via non-blocking
+    try-acquire) and whose mtime is older than the threshold are removed.
+
+    Returns:
+        List of file names that were removed.
+    """
+    directory = Path(lock_dir) if lock_dir else Path(tempfile.gettempdir())
+    if not directory.exists():
+        return []
+
+    removed: list[str] = []
+    cutoff = time.time() - max_age_seconds
+
+    for lock_path in directory.glob(".philiprehberger-lock-*.lock"):
+        try:
+            mtime = lock_path.stat().st_mtime
+        except OSError:
+            continue
+        if mtime >= cutoff:
+            continue
+        try:
+            fd = os.open(str(lock_path), os.O_CREAT | os.O_RDWR)
+        except OSError:
+            continue
+        try:
+            try:
+                _lock_fd(fd)
+            except OSError:
+                continue
+            try:
+                _unlock_fd(fd)
+            finally:
+                pass
+            try:
+                lock_path.unlink()
+                removed.append(lock_path.name)
+            except OSError:
+                pass
+        finally:
+            os.close(fd)
+
+    return removed
 
 
 def _acquire(lock_path: Path, timeout: float) -> int:

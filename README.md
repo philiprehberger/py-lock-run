@@ -49,12 +49,35 @@ with lock("my-job", lock_dir="/var/lock"):
     do_work()
 ```
 
+### Inspecting and cleaning up locks
+
+Check whether another process currently holds a lock (non-blocking):
+
+```python
+from philiprehberger_lock_run import is_locked
+
+if is_locked("my-job"):
+    print("Another process is running my-job")
+```
+
+Remove orphaned lock files older than a threshold (defaults to 24 hours).
+Only files that are not currently held are removed:
+
+```python
+from philiprehberger_lock_run import cleanup_locks
+
+removed = cleanup_locks(max_age_seconds=3600)
+print(f"Removed {len(removed)} stale lock files")
+```
+
 ## API
 
 | Name | Description |
 |------|-------------|
 | `lock(name, *, timeout=0, lock_dir=None)` | Context manager that acquires a file lock. Raises `LockError` on failure. |
 | `locked(name, **kwargs)` | Decorator that wraps the function body in a file lock. |
+| `is_locked(name, *, lock_dir=None)` | Return `True` if another process currently holds the named lock. Performs a non-blocking try-acquire. |
+| `cleanup_locks(lock_dir=None, *, max_age_seconds=86400)` | Remove orphaned lock files older than `max_age_seconds` that are not currently held. Returns the list of removed file names. |
 | `LockError` | Raised when a lock cannot be acquired. Extends `RuntimeError`. |
 
 ## Development

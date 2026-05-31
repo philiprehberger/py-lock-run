@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.2.0 (2026-05-30)
+
+- Add `is_locked()` non-blocking check for whether another process holds a lock
+- Add `cleanup_locks()` for removing stale orphaned lock files
+
 ## 0.1.6 (2026-03-31)
 
 - Standardize README to 3-badge format with emoji Support section
